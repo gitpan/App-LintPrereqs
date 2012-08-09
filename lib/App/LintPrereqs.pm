@@ -15,7 +15,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -30,18 +30,21 @@ core. Will also complain if there are missing prereqs.
 Designed to work with prereqs that are manually written. Does not work if you
 use AutoPrereqs.
 
-Configuration:
+Sometimes there are prerequisites that you know are used but can't be detected
+by scan_prereqs, or you want to include anyway. If this is the case, you can
+instruct lint_prereqs to assume the prerequisite is used.
 
-* [Extras / lint-prereqs / assume-used]
+    ;!lint-prereqs assume-used # even though we know it is not currently used
+    Foo::Bar=0
+    ;!lint-prereqs assume-used # we are forcing a certain version
+    Baz=0.12
 
-These are prerequisites that you know are used but can't be detected by
-scan_prereqs. Or prerequisites that you want to include anyway.
-
-* [Extras / lint-prereqs / assume-provided]
-
-These can be used to list prerequisites that are detected by scan_prereqs, but
+Sometimes there are also prerequisites that are detected by scan_prereqs, but
 you know are already provided by some other modules. So to make lint-prereqs
-pass, include them here.
+ignore them:
+
+    [Extras / lint-prereqs / assume-provided]
+    Qux::Quux=0
 
 _
     args => {
@@ -56,38 +59,32 @@ sub lint_prereqs {
 
     (-f "dist.ini")
         or return [412, "No dist.ini found, ".
-                       "is your repo managed by Dist::Zilla?"];
+                       "is your dist managed by Dist::Zilla?"];
 
     my $cfg = Config::IniFiles->new(-file => "dist.ini", -fallback => "ALL");
     $cfg or return [
         500, "Can't open dist.ini: ".join(", ", @Config::IniFiles::errors)];
 
     my %mods_from_ini;
+    my %assume_used;
+    my %assume_provided;
     for my $section (grep {
-        m!^(prereqs|extras \s*/\s* lint[_-]prereqs \s*/\s* assume-provided)!ix}
+        m!^(prereqs|extras \s*/\s* lint[_-]prereqs \s*/\s*
+              assume-(?:provided|used))!ix}
                          $cfg->Sections) {
         for my $param ($cfg->Parameters($section)) {
-            my $v = $cfg->val($section, $param);
+            my $v   = $cfg->val($section, $param);
+            my $cmt = $cfg->GetParameterComment($section, $param) // "";
             #$log->tracef("section=$section, param=$param, v=$v");
-            $mods_from_ini{$param} = $v;
+            $mods_from_ini{$param}   = $v unless $section =~ /assume-provided/;
+            $assume_provided{$param} = $v if     $section =~ /assume-provided/;
+            $assume_used{$param}     = $v if     $section =~ /assume-used/ ||
+                $cmt =~ /^!lint-prereqs\s+assume-used\b/;
         }
     }
     $log->tracef("mods_from_ini: %s", \%mods_from_ini);
-
-    # this module is required, says dist.ini, and that's it. even when prereq
-    # scanner says it's not used. examples are for forcing deps to spec dists
-    # like Rinci or Setup.
-    my %extra_mods_from_ini;
-    for my $section (grep {
-        m!^extras \s*/\s* lint[_-]prereqs \s*/\s* assume-used!ix}
-                         $cfg->Sections) {
-        for my $param ($cfg->Parameters($section)) {
-            my $v = $cfg->val($section, $param);
-            #$log->tracef("section=$section, param=$param, v=$v");
-            $extra_mods_from_ini{$param} = $v;
-        }
-    }
-    $log->tracef("extra_mods_from_ini: %s", \%extra_mods_from_ini);
+    $log->tracef("assume_used: %s", \%assume_used);
+    $log->tracef("assume_provided: %s", \%assume_provided);
 
     # assume package names from filenames, should be better and scan using PPI
     my %pkgs;
@@ -148,7 +145,7 @@ sub lint_prereqs {
             $err++;
         }
         unless (exists($mods_from_scanned{$mod}) ||
-                    exists($extra_mods_from_ini{$mod})) {
+                    exists($assume_used{$mod})) {
             $log->warnf("Module doesn't seem to be used, ".
                             "but mentioned in dist.ini: %s", $mod);
             $err++;
@@ -160,7 +157,8 @@ sub lint_prereqs {
         $log->tracef("Checking mod from scanned: %s", $mod);
         next if exists $core_mods{$mod}; # XXX check version
         next if exists $pkgs{$mod};
-        unless (exists $mods_from_ini{$mod}) {
+        unless (exists($mods_from_ini{$mod}) ||
+                    exists($assume_provided{$mod})) {
             $log->errorf("Module is used, but not mentioned in dist.ini: %s",
                          $mod);
             $err++;
@@ -186,11 +184,63 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 
  # Use via lint-prereqs CLI script
+
+=head1 DESCRIPTION
+
+
+This module has L<Rinci> metadata.
+
+=head1 FUNCTIONS
+
+
+None are exported by default, but they are exportable.
+
+=head2 lint_prereqs(%args) -> [status, msg, result, meta]
+
+Check extraneous/missing prerequisites in dist.ini.
+
+Check [Prereqs / *] sections in your dist.ini against what's actually being used
+in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
+modules. Will complain if your prereqs is not actually used, or already in Perl
+core. Will also complain if there are missing prereqs.
+
+Designed to work with prereqs that are manually written. Does not work if you
+use AutoPrereqs.
+
+Sometimes there are prerequisites that you know are used but can't be detected
+by scanI<prereqs, or you want to include anyway. If this is the case, you can
+instruct lint>prereqs to assume the prerequisite is used.
+
+    ;!lint-prereqs assume-used # even though we know it is not currently used
+    Foo::Bar=0
+    ;!lint-prereqs assume-used # we are forcing a certain version
+    Baz=0.12
+
+Sometimes there are also prerequisites that are detected by scan_prereqs, but
+you know are already provided by some other modules. So to make lint-prereqs
+ignore them:
+
+    [Extras / lint-prereqs / assume-provided]
+    Qux::Quux=0
+
+Arguments ('*' denotes required arguments):
+
+=over 4
+
+=item * B<default_perl_version> => I<str> (default: "5.010000")
+
+Perl version to use when unspecified.
+
+=back
+
+Return value:
+
+Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
 
 =head1 AUTHOR
 
