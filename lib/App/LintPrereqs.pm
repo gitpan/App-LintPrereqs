@@ -15,7 +15,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.03'; # VERSION
+our $VERSION = '0.04'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -79,7 +79,7 @@ sub lint_prereqs {
             $mods_from_ini{$param}   = $v unless $section =~ /assume-provided/;
             $assume_provided{$param} = $v if     $section =~ /assume-provided/;
             $assume_used{$param}     = $v if     $section =~ /assume-used/ ||
-                $cmt =~ /^;!lint-prereqs\s+assume-used\b/;
+                $cmt =~ /^;!lint-prereqs\s+assume-used\b/m;
         }
     }
     $log->tracef("mods_from_ini: %s", \%mods_from_ini);
@@ -184,7 +184,7 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.03
+version 0.04
 
 =head1 SYNOPSIS
 
