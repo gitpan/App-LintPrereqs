@@ -2,7 +2,7 @@ NAME
     App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 VERSION
-    version 0.02
+    version 0.03
 
 SYNOPSIS
      # Use via lint-prereqs CLI script
