@@ -15,7 +15,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.05'; # VERSION
+our $VERSION = '0.06'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -146,7 +146,8 @@ sub lint_prereqs {
         unless (exists($mods_from_scanned{$mod}) ||
                     exists($assume_used{$mod})) {
             push @errs, {
-                module=>$mod, message=>"Unused but mentioned"};
+                module  => $mod,
+                message => "Unused but listed in dist.ini"};
         }
     }
 
@@ -158,12 +159,13 @@ sub lint_prereqs {
         unless (exists($mods_from_ini{$mod}) ||
                     exists($assume_provided{$mod})) {
             push @errs, {
-                module=>$mod, message=>"Used but not mentioned"};
+                module  => $mod,
+                message => "Used but not listed in dist.ini"};
         }
     }
 
     [200, @errs ? "Extraneous/missing dependencies" : "OK", \@errs,
-     {"cmdline.exit_code" => @errs ? 1:0}];
+     {"cmdline.exit_code" => @errs ? 200:0}];
 }
 
 1;
@@ -179,7 +181,7 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.05
+version 0.06
 
 =head1 SYNOPSIS
 
