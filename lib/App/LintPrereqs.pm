@@ -15,7 +15,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.06'; # VERSION
+our $VERSION = '0.07'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -141,12 +141,15 @@ sub lint_prereqs {
         if (exists($core_mods{$mod}) &&
                 versioncmp($core_mods{$mod}, $mods_from_ini{$mod}) >= 0) {
             push @errs, {
-                module=>$mod, message=>"Core but mentioned"};
+                module  => $mod,
+                version => $mods_from_ini{$mod},
+                message => "Core but mentioned"};
         }
         unless (exists($mods_from_scanned{$mod}) ||
                     exists($assume_used{$mod})) {
             push @errs, {
                 module  => $mod,
+                version => $mods_from_ini{$mod},
                 message => "Unused but listed in dist.ini"};
         }
     }
@@ -160,6 +163,7 @@ sub lint_prereqs {
                     exists($assume_provided{$mod})) {
             push @errs, {
                 module  => $mod,
+                version => $mods_from_scanned{$mod},
                 message => "Used but not listed in dist.ini"};
         }
     }
@@ -181,14 +185,21 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 SYNOPSIS
 
  # Use via lint-prereqs CLI script
 
+=head1 DESCRIPTION
+
+
+This module has L<Rinci> metadata.
+
 =head1 FUNCTIONS
 
+
+None are exported by default, but they are exportable.
 
 =head2 lint_prereqs(%args) -> [status, msg, result, meta]
 
@@ -203,7 +214,7 @@ Designed to work with prerequisites that are manually written. Does not work if
 you use AutoPrereqs.
 
 Sometimes there are prerequisites that you know are used but can't be detected
-by scanB<prereqs, or you want to include anyway. If this is the case, you can
+by scanI<prereqs, or you want to include anyway. If this is the case, you can
 instruct lint>prereqs to assume the prerequisite is used.
 
     ;!lint-prereqs assume-used # even though we know it is not currently used

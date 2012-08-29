@@ -4,7 +4,7 @@
       "Steven Haryanto <stevenharyanto@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300015, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Zilla version 4.300006, CPAN::Meta::Converter version 2.113640",
    "license" : [
       "perl_5"
    ],
@@ -26,12 +26,12 @@
       },
       "runtime" : {
          "requires" : {
-            "Config::IniFiles" : "0",
-            "File::Which" : "0",
-            "Log::Any" : "0",
+            "Config::IniFiles" : 0,
+            "File::Which" : 0,
+            "Log::Any" : 0,
             "Perinci::CmdLine" : "0.62",
-            "Perl::PrereqScanner" : "0",
-            "Sort::Versions" : "0",
+            "Perl::PrereqScanner" : 0,
+            "Sort::Versions" : 0,
             "perl" : "5.010000"
          }
       }
@@ -43,6 +43,6 @@
          "url" : "http://github.com/sharyanto/perl-App-LintPrereqs"
       }
    },
-   "version" : "0.06"
+   "version" : "0.07"
 }
 
