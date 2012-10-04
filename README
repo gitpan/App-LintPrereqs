@@ -2,17 +2,12 @@ NAME
     App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 VERSION
-    version 0.07
+    version 0.08
 
 SYNOPSIS
      # Use via lint-prereqs CLI script
 
-DESCRIPTION
-    This module has Rinci metadata.
-
 FUNCTIONS
-    None are exported by default, but they are exportable.
-
   lint_prereqs(%args) -> [status, msg, result, meta]
     Check extraneous/missing prerequisites in dist.ini.
 
@@ -26,8 +21,8 @@ FUNCTIONS
     work if you use AutoPrereqs.
 
     Sometimes there are prerequisites that you know are used but can't be
-    detected by scan*prereqs, or you want to include anyway. If this is the
-    case, you can instruct lint*prereqs to assume the prerequisite is used.
+    detected by scanprereqs, or you want to include anyway. If this is the
+    case, you can instruct lintprereqs to assume the prerequisite is used.
 
         ;!lint-prereqs assume-used # even though we know it is not currently used
         Foo::Bar=0
