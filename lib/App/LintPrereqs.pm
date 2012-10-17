@@ -15,7 +15,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.08'; # VERSION
+our $VERSION = '0.09'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -93,9 +93,10 @@ sub lint_prereqs {
         wanted => sub {
             return unless /\.pm$/;
             my $pkg = $File::Find::dir;
-            $pkg =~ s!^lib/!!;
+            #$log->errorf("TMP:pkg=%s",$pkg);
+            $pkg =~ s!^lib/?!!;
             $pkg =~ s!/!::!g;
-            $pkg .= "::$_";
+            $pkg .= (length($pkg) ? "::" : "") . $_;
             $pkg =~ s/\.pm$//;
             $pkgs{$pkg}++;
         },
@@ -153,7 +154,7 @@ sub lint_prereqs {
             push @errs, {
                 module  => $mod,
                 version => $mods_from_ini{$mod},
-                message => "Core since perl $perlv but mentioned"};
+                message => "Core in perl $perlv but mentioned"};
         }
         unless (exists($mods_from_scanned{$mod}) ||
                     exists($assume_used{$mod})) {
@@ -195,14 +196,21 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.08
+version 0.09
 
 =head1 SYNOPSIS
 
  # Use via lint-prereqs CLI script
 
+=head1 DESCRIPTION
+
+
+This module has L<Rinci> metadata.
+
 =head1 FUNCTIONS
 
+
+None are exported by default, but they are exportable.
 
 =head2 lint_prereqs(%args) -> [status, msg, result, meta]
 
@@ -217,7 +225,7 @@ Designed to work with prerequisites that are manually written. Does not work if
 you use AutoPrereqs.
 
 Sometimes there are prerequisites that you know are used but can't be detected
-by scanB<prereqs, or you want to include anyway. If this is the case, you can
+by scanI<prereqs, or you want to include anyway. If this is the case, you can
 instruct lint>prereqs to assume the prerequisite is used.
 
     ;!lint-prereqs assume-used # even though we know it is not currently used
