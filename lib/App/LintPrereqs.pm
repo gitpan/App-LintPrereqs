@@ -16,7 +16,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -187,7 +187,7 @@ sub lint_prereqs {
                 version => $mods_from_ini{$mod},
                 message => "Core in perl $perlv but mentioned"};
         }
-        if (exists $mods_from_scanned{$mod} &&
+        if (exists($mods_from_scanned{$mod}) && $mods_from_scanned{$mod} != 0 &&
                 versioncmp($mods_from_ini{$mod}, $mods_from_scanned{$mod})) {
             push @errs, {
                 module  => $mod,
@@ -235,7 +235,7 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 SYNOPSIS
 

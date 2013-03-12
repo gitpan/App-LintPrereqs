@@ -24,4 +24,4 @@ requires:
 resources:
   homepage: http://metacpan.org/dist/App-LintPrereqs
   repository: http://github.com/sharyanto/perl-App-LintPrereqs
-version: 0.10
+version: 0.11
