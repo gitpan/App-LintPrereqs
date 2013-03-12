@@ -17,7 +17,7 @@ my %module_build_args = (
     "Steven Haryanto <stevenharyanto\@gmail.com>"
   ],
   "dist_name" => "App-LintPrereqs",
-  "dist_version" => "0.09",
+  "dist_version" => "0.10",
   "license" => "perl",
   "module_name" => "App::LintPrereqs",
   "recommends" => {},
@@ -29,7 +29,7 @@ my %module_build_args = (
     "Perinci::CmdLine" => "0.62",
     "Perl::PrereqScanner" => 0,
     "Sort::Versions" => 0,
-    "perl" => "5.010000"
+    "perl" => "5.010001"
   },
   "script_files" => [
     "bin/lint-prereqs"

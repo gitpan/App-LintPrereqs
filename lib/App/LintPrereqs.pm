@@ -1,6 +1,6 @@
 package App::LintPrereqs;
 
-use 5.010;
+use 5.010001;
 use strict;
 use warnings;
 use Log::Any qw($log);
@@ -9,13 +9,14 @@ use Config::IniFiles;
 use File::Find;
 use File::Which;
 use Sort::Versions;
+use Scalar::Util 'looks_like_number';
 
 our %SPEC;
 require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.09'; # VERSION
+our $VERSION = '0.10'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -48,10 +49,13 @@ ignore them:
 
 _
     args => {
-        default_perl_version => {
-            schema => [str => {default=>'5.010000'}],
-            summary => 'Perl version to use when unspecified',
+        perl_version => {
+            schema => ['str*'],
+            summary => 'Perl version to use (overrides scan_prereqs/dist.ini)',
         },
+    },
+    deps => {
+        prog => 'scan_prereqs',
     },
 };
 sub lint_prereqs {
@@ -104,8 +108,7 @@ sub lint_prereqs {
     $log->tracef("Packages: %s", \%pkgs);
 
     my %mods_from_scanned;
-    my $sppath = which("scan_prereqs")
-        or return [412, "Can't find scan_prereqs in PATH"];
+    my $sppath = "scan_prereqs";
     my $spcmd = "$sppath --combine .";
     $spcmd .= " t/*.t" if <t/*.t>;
     $spcmd .= " bin/*" if <bin/*>;
@@ -120,9 +123,37 @@ sub lint_prereqs {
     }
     $log->tracef("mods_from_scanned: %s", \%mods_from_scanned);
 
-    my $perlv = $mods_from_ini{perl} // $mods_from_scanned{perl} // '5.010000';
-    return [400, "Invalid syntax in perl version: $perlv"]
-        unless $perlv =~ /\A\d+(\.\d+)*\z/;
+    if ($mods_from_ini{perl} && $mods_from_scanned{perl}) {
+        if (versioncmp($mods_from_ini{perl}, $mods_from_scanned{perl})) {
+            return [500, "Perl version from dist.ini ($mods_from_ini{perl}) ".
+                        "and scan_prereqs ($mods_from_scanned{perl}) mismatch"];
+        }
+    }
+
+    my $perlv; # min perl v to use (& base corelist -v on), in x.yyyzzz format
+    if ($args{perl_version}) {
+        $log->tracef("Will assume perl %s (via perl_version argument)",
+                     $args{perl_version});
+        $perlv = $args{perl_version};
+    } elsif ($mods_from_ini{perl}) {
+        $log->tracef("Will assume perl %s (via dist.ini)",
+                     $mods_from_ini{perl});
+        $perlv = $mods_from_ini{perl};
+    } elsif ($mods_from_scanned{perl}) {
+        $log->tracef("Will assume perl %s (via scan_prereqs)",
+                     $mods_from_scanned{perl});
+        $perlv = $mods_from_scanned{perl};
+    } else {
+        $log->tracef("Will assume perl %s (from running interpreter's \$^V)",
+                     $^V);
+        if ($^V =~ /^v(\d+)\.(\d+)\.(\d+)/) {
+            $perlv = sprintf("%d\.%03d%03d", $1, $2, $3)+0;
+        } elsif (looks_like_number($^V)) {
+            $perlv = $^V;
+        } else {
+            return [500, "Can't parse \$^V ($^V)"];
+        }
+    }
 
     my %core_mods;
     my $clpath = which("corelist")
@@ -130,7 +161,7 @@ sub lint_prereqs {
     my @clout = `corelist -v $perlv`;
     if ($?) {
         my $clout = join "", @clout;
-        return [400, "corelist doesn't recognize perl version $perlv"]
+        return [500, "corelist doesn't recognize perl version $perlv"]
             if $clout =~ /has no info on perl /;
         return [500, "Can't execute corelist command successfully"];
     }
@@ -155,6 +186,14 @@ sub lint_prereqs {
                 module  => $mod,
                 version => $mods_from_ini{$mod},
                 message => "Core in perl $perlv but mentioned"};
+        }
+        if (exists $mods_from_scanned{$mod} &&
+                versioncmp($mods_from_ini{$mod}, $mods_from_scanned{$mod})) {
+            push @errs, {
+                module  => $mod,
+                version => $mods_from_ini{$mod},
+                message => "Version mismatch (".
+                    "$mods_from_scanned{$mod} from scan_prereqs)"};
         }
         unless (exists($mods_from_scanned{$mod}) ||
                     exists($assume_used{$mod})) {
@@ -196,59 +235,18 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 SYNOPSIS
 
  # Use via lint-prereqs CLI script
 
-=head1 DESCRIPTION
-
-
-This module has L<Rinci> metadata.
-
 =head1 FUNCTIONS
 
 
-None are exported by default, but they are exportable.
+=head2 lint_prereqs() -> [status, msg, result, meta]
 
-=head2 lint_prereqs(%args) -> [status, msg, result, meta]
-
-Check extraneous/missing prerequisites in dist.ini.
-
-Check [Prereqs / *] sections in your dist.ini against what's actually being used
-in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
-modules. Will complain if your prerequisites are not actually used, or already
-in Perl core. Will also complain if there are missing prerequisites.
-
-Designed to work with prerequisites that are manually written. Does not work if
-you use AutoPrereqs.
-
-Sometimes there are prerequisites that you know are used but can't be detected
-by scanI<prereqs, or you want to include anyway. If this is the case, you can
-instruct lint>prereqs to assume the prerequisite is used.
-
-    ;!lint-prereqs assume-used # even though we know it is not currently used
-    Foo::Bar=0
-    ;!lint-prereqs assume-used # we are forcing a certain version
-    Baz=0.12
-
-Sometimes there are also prerequisites that are detected by scan_prereqs, but
-you know are already provided by some other modules. So to make lint-prereqs
-ignore them:
-
-    [Extras / lint-prereqs / assume-provided]
-    Qux::Quux=0
-
-Arguments ('*' denotes required arguments):
-
-=over 4
-
-=item * B<default_perl_version> => I<str> (default: "5.010000")
-
-Perl version to use when unspecified.
-
-=back
+No arguments.
 
 Return value:
 
@@ -260,7 +258,7 @@ Steven Haryanto <stevenharyanto@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by Steven Haryanto.
+This software is copyright (c) 2013 by Steven Haryanto.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
