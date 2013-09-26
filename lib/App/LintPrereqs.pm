@@ -16,7 +16,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.11'; # VERSION
+our $VERSION = '0.12'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -62,8 +62,9 @@ sub lint_prereqs {
     my %args = @_;
 
     (-f "dist.ini")
-        or return [412, "No dist.ini found, ".
-                       "is your dist managed by Dist::Zilla?"];
+        or return [412, "No dist.ini found. ".
+                       "Are you in the right dir (dist top-level)? ".
+                           "Is your dist managed by Dist::Zilla?"];
 
     my $cfg = Config::IniFiles->new(-file => "dist.ini", -fallback => "ALL");
     $cfg or return [
@@ -178,56 +179,83 @@ sub lint_prereqs {
 
     my @errs;
     for my $mod (keys %mods_from_ini) {
+        my $v = $mods_from_ini{$mod};
         next if $mod eq 'perl';
-        $log->tracef("Checking mod from dist.ini: %s", $mod);
-        if (exists($core_mods{$mod}) &&
-                versioncmp($core_mods{$mod}, $mods_from_ini{$mod}) >= 0) {
+        $log->tracef("Checking mod from dist.ini: %s (%s)", $mod, $v);
+        my $incorev = $core_mods{$mod};
+        if (defined($incorev) && versioncmp($incorev, $v) >= 0) {
             push @errs, {
                 module  => $mod,
-                version => $mods_from_ini{$mod},
-                message => "Core in perl $perlv but mentioned"};
+                error   => "Core in perl $perlv ($incorev) but ".
+                    "mentioned in dist.ini ($v)",
+                remedy  => "Remove in dist.ini or lower perl version ".
+                    "requirement",
+            };
         }
-        if (exists($mods_from_scanned{$mod}) && $mods_from_scanned{$mod} != 0 &&
-                versioncmp($mods_from_ini{$mod}, $mods_from_scanned{$mod})) {
+        my $scanv = $mods_from_scanned{$mod};
+        if (defined($scanv) && $scanv != 0 && versioncmp($v, $scanv)) {
             push @errs, {
                 module  => $mod,
-                version => $mods_from_ini{$mod},
-                message => "Version mismatch (".
-                    "$mods_from_scanned{$mod} from scan_prereqs)"};
+                error   => "Version mismatch between dist.ini ($v) ".
+                    "and from scanned_prereqs ($scanv)",
+                remedy  => "Fix either the code or version in dist.ini",
+            };
         }
-        unless (exists($mods_from_scanned{$mod}) ||
-                    exists($assume_used{$mod})) {
+        unless (defined($scanv) || exists($assume_used{$mod})) {
             push @errs, {
                 module  => $mod,
-                version => $mods_from_ini{$mod},
-                message => "Unused but listed in dist.ini"};
+                error   => "Unused but listed in dist.ini",
+                remedy  => "Remove from dist.ini",
+            };
         }
     }
 
     for my $mod (keys %mods_from_scanned) {
         next if $mod eq 'perl';
-        $log->tracef("Checking mod from scanned: %s", $mod);
-        next if exists $core_mods{$mod}; # XXX check version
+        my $v = $mods_from_scanned{$mod};
+        $log->tracef("Checking mod from scanned: %s (%s)", $mod, $v);
+        if (exists $core_mods{$mod}) {
+            my $incorev = $core_mods{$mod};
+            if ($v != 0 && !$mods_from_ini{$mod} &&
+                    versioncmp($incorev, $v) == -1) {
+                push @errs, {
+                    module  => $mod,
+                    error   => "Version requested $v (from scan_prereqs) is ".
+                        "higher than bundled with perl $perlv ($incorev)",
+                    remedy  => "Specify in dist.ini with version=$v",
+                };
+            }
+            next;
+        }
         next if exists $pkgs{$mod};
         unless (exists($mods_from_ini{$mod}) ||
                     exists($assume_provided{$mod})) {
             push @errs, {
                 module  => $mod,
-                version => $mods_from_scanned{$mod},
-                message => "Used but not listed in dist.ini"};
+                error   => "Used but not listed in dist.ini",
+                remedy  => "Put '$mod=$v' in dist.ini",
+            };
         }
     }
 
-    [200, @errs ? "Extraneous/missing dependencies" : "OK", \@errs,
-     {"cmdline.exit_code" => @errs ? 200:0}];
+    my $rfopts = {
+        table_column_orders  => [[qw/module error remedy/]],
+    };
+    my $resmeta = {
+        "cmdline.exit_code" => @errs ? 500-300:0,
+        result_format_options => {text=>$rfopts, "text-pretty"=>$rfopts},
+    };
+    [200, @errs ? "Extraneous/missing dependencies" : "OK", \@errs, $resmeta];
 }
 
 1;
 #ABSTRACT: Check extraneous/missing prerequisites in dist.ini
 
-
 __END__
+
 =pod
+
+=encoding utf-8
 
 =head1 NAME
 
@@ -235,22 +263,11 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.11
+version 0.12
 
 =head1 SYNOPSIS
 
  # Use via lint-prereqs CLI script
-
-=head1 FUNCTIONS
-
-
-=head2 lint_prereqs() -> [status, msg, result, meta]
-
-No arguments.
-
-Return value:
-
-Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
 
 =head1 AUTHOR
 
@@ -263,5 +280,51 @@ This software is copyright (c) 2013 by Steven Haryanto.
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
-=cut
+=head1 DESCRIPTION
 
+=head1 FUNCTIONS
+
+
+None are exported by default, but they are exportable.
+
+=head2 lint_prereqs(%args) -> [status, msg, result, meta]
+
+Check [Prereqs / *] sections in your dist.ini against what's actually being used
+in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
+modules. Will complain if your prerequisites are not actually used, or already
+in Perl core. Will also complain if there are missing prerequisites.
+
+Designed to work with prerequisites that are manually written. Does not work if
+you use AutoPrereqs.
+
+Sometimes there are prerequisites that you know are used but can't be detected
+by scanI<prereqs, or you want to include anyway. If this is the case, you can
+instruct lint>prereqs to assume the prerequisite is used.
+
+    ;!lint-prereqs assume-used # even though we know it is not currently used
+    Foo::Bar=0
+    ;!lint-prereqs assume-used # we are forcing a certain version
+    Baz=0.12
+
+Sometimes there are also prerequisites that are detected by scan_prereqs, but
+you know are already provided by some other modules. So to make lint-prereqs
+ignore them:
+
+    [Extras / lint-prereqs / assume-provided]
+    Qux::Quux=0
+
+Arguments ('*' denotes required arguments):
+
+=over 4
+
+=item * B<perl_version> => I<str>
+
+Perl version to use (overrides scan_prereqs/dist.ini).
+
+=back
+
+Return value:
+
+Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
+
+=cut
