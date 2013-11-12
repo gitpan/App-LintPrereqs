@@ -6,7 +6,7 @@ use warnings;
 
 use Perinci::CmdLine 0.62;
 
-our $VERSION = '0.12'; # VERSION
+our $VERSION = '0.13'; # VERSION
 
 Perinci::CmdLine->new(url => '/App/LintPrereqs/lint_prereqs')->run;
 
@@ -17,7 +17,7 @@ __END__
 
 =pod
 
-=encoding utf-8
+=encoding UTF-8
 
 =head1 NAME
 
@@ -25,7 +25,7 @@ lint-prereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 SYNOPSIS
 
@@ -44,6 +44,27 @@ On errors, error messages will be printed, for example:
  ERROR 500: Extraneous/missing dependencies
 
 To customize, see L<App::LintPrereqs>.
+
+=head1 SEE ALSO
+
+L<Dist::Zilla>
+
+=head1 HOMEPAGE
+
+Please visit the project's homepage at L<https://metacpan.org/release/App-LintPrereqs>.
+
+=head1 SOURCE
+
+Source repository is at L<https://github.com/sharyanto/perl-App-LintPrereqs>.
+
+=head1 BUGS
+
+Please report any bugs or feature requests on the bugtracker website
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=App-LintPrereqs>
+
+When submitting a bug or request, please include a test-file or a
+patch to an existing test-file that illustrates the bug or desired
+feature.
 
 =head1 AUTHOR
 
