@@ -16,7 +16,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -58,9 +58,9 @@ _
         prog => 'scan_prereqs',
     },
 };
-sub lint_prereqs {
+use experimental 'smartmatch'; { my $meta = $App::LintPrereqs::SPEC{lint_prereqs}; $meta->{'x.perinci.sub.wrapper.log'} = [{'validate_args' => 1,'normalize_schema' => 1,'validate_result' => 1,'embed' => 1}]; $meta->{args}{'perl_version'}{schema} = ['str',{'req' => 1},{}]; } sub lint_prereqs {
     my %args = @_;
-
+ my $_sahv_dpath = []; my $_w_res = undef; for (sort keys %args) { if (!/\A(-?)\w+(\.\w+)*\z/o) { return [400, "Invalid argument name '$_'"]; } if (!($1 || $_ ~~ ['perl_version'])) { return [400, "Unknown argument '$_'"]; } } if (exists($args{'perl_version'})) { my $err_perl_version; ((defined($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required input not specified"),0)) && ((!ref($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Input is not of type text"),0)); if ($err_perl_version) { return [400, "Invalid value for argument 'perl_version': $err_perl_version"]; } } require Perinci::Sub::DepChecker; my $_w_deps_res = Perinci::Sub::DepChecker::check_deps($App::LintPrereqs::SPEC{lint_prereqs}->{deps}); if ($_w_deps_res) { return [412, "Deps failed: $_w_deps_res"]; }    $_w_res = do {
     (-f "dist.ini")
         or return [412, "No dist.ini found. ".
                        "Are you in the right dir (dist top-level)? ".
@@ -246,7 +246,7 @@ sub lint_prereqs {
         result_format_options => {text=>$rfopts, "text-pretty"=>$rfopts},
     };
     [200, @errs ? "Extraneous/missing dependencies" : "OK", \@errs, $resmeta];
-}
+};      unless (ref($_w_res) eq "ARRAY" && $_w_res->[0]) { return [500, 'BUG: Sub App::LintPrereqs::lint_prereqs does not produce envelope']; } return $_w_res; }
 
 1;
 #ABSTRACT: Check extraneous/missing prerequisites in dist.ini
@@ -263,20 +263,18 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 SYNOPSIS
 
  # Use via lint-prereqs CLI script
 
-=head1 DESCRIPTION
-
 =head1 FUNCTIONS
 
 
-None are exported by default, but they are exportable.
-
 =head2 lint_prereqs(%args) -> [status, msg, result, meta]
+
+Check extraneous/missing prerequisites in dist.ini.
 
 Check [Prereqs / *] sections in your dist.ini against what's actually being used
 in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
@@ -308,7 +306,31 @@ Arguments ('*' denotes required arguments):
 
 =item * B<perl_version> => I<str>
 
-Perl version to use (overrides scan_prereqs/dist.ini).
+Check extraneous/missing prerequisites in dist.ini.
+
+Check [Prereqs / *] sections in your dist.ini against what's actually being used
+in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
+modules. Will complain if your prerequisites are not actually used, or already
+in Perl core. Will also complain if there are missing prerequisites.
+
+Designed to work with prerequisites that are manually written. Does not work if
+you use AutoPrereqs.
+
+Sometimes there are prerequisites that you know are used but can't be detected
+by scanI<prereqs, or you want to include anyway. If this is the case, you can
+instruct lint>prereqs to assume the prerequisite is used.
+
+    ;!lint-prereqs assume-used # even though we know it is not currently used
+    Foo::Bar=0
+    ;!lint-prereqs assume-used # we are forcing a certain version
+    Baz=0.12
+
+Sometimes there are also prerequisites that are detected by scan_prereqs, but
+you know are already provided by some other modules. So to make lint-prereqs
+ignore them:
+
+    [Extras / lint-prereqs / assume-provided]
+    Qux::Quux=0
 
 =back
 
@@ -326,8 +348,7 @@ Source repository is at L<https://github.com/sharyanto/perl-App-LintPrereqs>.
 
 =head1 BUGS
 
-Please report any bugs or feature requests on the bugtracker website
-L<https://rt.cpan.org/Public/Dist/Display.html?Name=App-LintPrereqs>
+Please report any bugs or feature requests on the bugtracker website L<https://rt.cpan.org/Public/Dist/Display.html?Name=App-LintPrereqs>
 
 When submitting a bug or request, please include a test-file or a
 patch to an existing test-file that illustrates the bug or desired
@@ -339,7 +360,7 @@ Steven Haryanto <stevenharyanto@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Steven Haryanto.
+This software is copyright (c) 2014 by Steven Haryanto.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
