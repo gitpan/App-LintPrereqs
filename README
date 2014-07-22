@@ -2,7 +2,8 @@ NAME
     App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 VERSION
-    version 0.14
+    This document describes version 0.15 of App::LintPrereqs (from Perl
+    distribution App-LintPrereqs), released on 2014-07-22.
 
 SYNOPSIS
      # Use via lint-prereqs CLI script
@@ -21,61 +22,39 @@ FUNCTIONS
     work if you use AutoPrereqs.
 
     Sometimes there are prerequisites that you know are used but can't be
-    detected by scan*prereqs, or you want to include anyway. If this is the
-    case, you can instruct lint*prereqs to assume the prerequisite is used.
+    detected by scan_prereqs, or you want to include anyway. If this is the
+    case, you can instruct lint_prereqs to assume the prerequisite is used.
 
-        ;!lint-prereqs assume-used # even though we know it is not currently used
-        Foo::Bar=0
-        ;!lint-prereqs assume-used # we are forcing a certain version
-        Baz=0.12
+     ;!lint-prereqs assume-used # even though we know it is not currently used
+     Foo::Bar=0
+     ;!lint-prereqs assume-used # we are forcing a certain version
+     Baz=0.12
 
     Sometimes there are also prerequisites that are detected by
     scan_prereqs, but you know are already provided by some other modules.
     So to make lint-prereqs ignore them:
 
-        [Extras / lint-prereqs / assume-provided]
-        Qux::Quux=0
+     [Extras / lint-prereqs / assume-provided]
+     Qux::Quux=0
 
     Arguments ('*' denotes required arguments):
 
     *   perl_version => *str*
 
-        Check extraneous/missing prerequisites in dist.ini.
-
-        Check [Prereqs / *] sections in your dist.ini against what's
-        actually being used in your Perl code (using Perl::PrereqScanner)
-        and what's in Perl core list of modules. Will complain if your
-        prerequisites are not actually used, or already in Perl core. Will
-        also complain if there are missing prerequisites.
-
-        Designed to work with prerequisites that are manually written. Does
-        not work if you use AutoPrereqs.
-
-        Sometimes there are prerequisites that you know are used but can't
-        be detected by scan*prereqs, or you want to include anyway. If this
-        is the case, you can instruct lint*prereqs to assume the
-        prerequisite is used.
-
-            ;!lint-prereqs assume-used # even though we know it is not currently used
-            Foo::Bar=0
-            ;!lint-prereqs assume-used # we are forcing a certain version
-            Baz=0.12
-
-        Sometimes there are also prerequisites that are detected by
-        scan_prereqs, but you know are already provided by some other
-        modules. So to make lint-prereqs ignore them:
-
-            [Extras / lint-prereqs / assume-provided]
-            Qux::Quux=0
+        Perl version to use (overrides scan_prereqs/dist.ini).
 
     Return value:
 
-    Returns an enveloped result (an array). First element (status) is an
-    integer containing HTTP status code (200 means OK, 4xx caller error, 5xx
-    function error). Second element (msg) is a string containing error
-    message, or 'OK' if status is 200. Third element (result) is optional,
-    the actual result. Fourth element (meta) is called result metadata and
-    is optional, a hash that contains extra information.
+    Returns an enveloped result (an array).
+
+    First element (status) is an integer containing HTTP status code (200
+    means OK, 4xx caller error, 5xx function error). Second element (msg) is
+    a string containing error message, or 'OK' if status is 200. Third
+    element (result) is optional, the actual result. Fourth element (meta)
+    is called result metadata and is optional, a hash that contains extra
+    information.
+
+     (any)
 
 HOMEPAGE
     Please visit the project's homepage at

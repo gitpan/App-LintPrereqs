@@ -1,14 +1,14 @@
-#!/usr/bin/perl
+#!perl
 
 use 5.010;
 use strict;
 use warnings;
 
-use Perinci::CmdLine 0.62;
+use Perinci::CmdLine::Any;
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
-Perinci::CmdLine->new(url => '/App/LintPrereqs/lint_prereqs')->run;
+Perinci::CmdLine::Any->new(url => '/App/LintPrereqs/lint_prereqs')->run;
 
 # ABSTRACT: Check extraneous/missing prerequisites in dist.ini
 # PODNAME: lint-prereqs
@@ -25,7 +25,7 @@ lint-prereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.14
+This document describes version 0.15 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2014-07-22.
 
 =head1 SYNOPSIS
 

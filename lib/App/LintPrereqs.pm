@@ -16,7 +16,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -58,9 +58,9 @@ _
         prog => 'scan_prereqs',
     },
 };
-use experimental 'smartmatch'; { my $meta = $App::LintPrereqs::SPEC{lint_prereqs}; $meta->{'x.perinci.sub.wrapper.log'} = [{'validate_args' => 1,'normalize_schema' => 1,'validate_result' => 1,'embed' => 1}]; $meta->{args}{'perl_version'}{schema} = ['str',{'req' => 1},{}]; } sub lint_prereqs {
+require Perinci::Sub::DepChecker; use experimental 'smartmatch';  sub lint_prereqs {
     my %args = @_;
- my $_sahv_dpath = []; my $_w_res = undef; for (sort keys %args) { if (!/\A(-?)\w+(\.\w+)*\z/o) { return [400, "Invalid argument name '$_'"]; } if (!($1 || $_ ~~ ['perl_version'])) { return [400, "Unknown argument '$_'"]; } } if (exists($args{'perl_version'})) { my $err_perl_version; ((defined($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required input not specified"),0)) && ((!ref($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Input is not of type text"),0)); if ($err_perl_version) { return [400, "Invalid value for argument 'perl_version': $err_perl_version"]; } } require Perinci::Sub::DepChecker; my $_w_deps_res = Perinci::Sub::DepChecker::check_deps($App::LintPrereqs::SPEC{lint_prereqs}->{deps}); if ($_w_deps_res) { return [412, "Deps failed: $_w_deps_res"]; }    $_w_res = do {
+ my $_sahv_dpath = []; my $_w_res = undef; for (sort keys %args) { if (!/\A(-?)\w+(\.\w+)*\z/o) { return [400, "Invalid argument name '$_'"]; } if (!($1 || $_ ~~ ['perl_version'])) { return [400, "Unknown argument '$_'"]; } } if (exists($args{'perl_version'})) { my $err_perl_version; ((defined($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required input not specified"),0)) && ((!ref($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Input is not of type text"),0)); if ($err_perl_version) { return [400, "Invalid value for argument 'perl_version': $err_perl_version"]; } } my $_w_deps_res = Perinci::Sub::DepChecker::check_deps($App::LintPrereqs::SPEC{lint_prereqs}->{deps}); if ($_w_deps_res) { return [412, "Deps failed: $_w_deps_res"]; }    $_w_res = do {
     (-f "dist.ini")
         or return [412, "No dist.ini found. ".
                        "Are you in the right dir (dist top-level)? ".
@@ -263,7 +263,7 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-version 0.14
+This document describes version 0.15 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2014-07-22.
 
 =head1 SYNOPSIS
 
@@ -285,20 +285,20 @@ Designed to work with prerequisites that are manually written. Does not work if
 you use AutoPrereqs.
 
 Sometimes there are prerequisites that you know are used but can't be detected
-by scanI<prereqs, or you want to include anyway. If this is the case, you can
-instruct lint>prereqs to assume the prerequisite is used.
+by scan_prereqs, or you want to include anyway. If this is the case, you can
+instruct lint_prereqs to assume the prerequisite is used.
 
-    ;!lint-prereqs assume-used # even though we know it is not currently used
-    Foo::Bar=0
-    ;!lint-prereqs assume-used # we are forcing a certain version
-    Baz=0.12
+ ;!lint-prereqs assume-used # even though we know it is not currently used
+ Foo::Bar=0
+ ;!lint-prereqs assume-used # we are forcing a certain version
+ Baz=0.12
 
 Sometimes there are also prerequisites that are detected by scan_prereqs, but
 you know are already provided by some other modules. So to make lint-prereqs
 ignore them:
 
-    [Extras / lint-prereqs / assume-provided]
-    Qux::Quux=0
+ [Extras / lint-prereqs / assume-provided]
+ Qux::Quux=0
 
 Arguments ('*' denotes required arguments):
 
@@ -306,37 +306,22 @@ Arguments ('*' denotes required arguments):
 
 =item * B<perl_version> => I<str>
 
-Check extraneous/missing prerequisites in dist.ini.
-
-Check [Prereqs / *] sections in your dist.ini against what's actually being used
-in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
-modules. Will complain if your prerequisites are not actually used, or already
-in Perl core. Will also complain if there are missing prerequisites.
-
-Designed to work with prerequisites that are manually written. Does not work if
-you use AutoPrereqs.
-
-Sometimes there are prerequisites that you know are used but can't be detected
-by scanI<prereqs, or you want to include anyway. If this is the case, you can
-instruct lint>prereqs to assume the prerequisite is used.
-
-    ;!lint-prereqs assume-used # even though we know it is not currently used
-    Foo::Bar=0
-    ;!lint-prereqs assume-used # we are forcing a certain version
-    Baz=0.12
-
-Sometimes there are also prerequisites that are detected by scan_prereqs, but
-you know are already provided by some other modules. So to make lint-prereqs
-ignore them:
-
-    [Extras / lint-prereqs / assume-provided]
-    Qux::Quux=0
+Perl version to use (overrides scan_prereqs/dist.ini).
 
 =back
 
 Return value:
 
-Returns an enveloped result (an array). First element (status) is an integer containing HTTP status code (200 means OK, 4xx caller error, 5xx function error). Second element (msg) is a string containing error message, or 'OK' if status is 200. Third element (result) is optional, the actual result. Fourth element (meta) is called result metadata and is optional, a hash that contains extra information.
+Returns an enveloped result (an array).
+
+First element (status) is an integer containing HTTP status code
+(200 means OK, 4xx caller error, 5xx function error). Second element
+(msg) is a string containing error message, or 'OK' if status is
+200. Third element (result) is optional, the actual result. Fourth
+element (meta) is called result metadata and is optional, a hash
+that contains extra information.
+
+ (any)
 
 =head1 HOMEPAGE
 
