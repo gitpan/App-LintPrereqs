@@ -20,7 +20,7 @@ requires:
   Config::IniFiles: '0'
   File::Which: '0'
   Log::Any: '0'
-  Perinci::CmdLine::Any: '0'
+  Perinci::CmdLine::Any: '0.06'
   Perinci::Sub::DepChecker: '0'
   Perl::PrereqScanner: '0'
   Rinci: v1.1.0
@@ -31,11 +31,15 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=App-LintPrereqs
   homepage: https://metacpan.org/release/App-LintPrereqs
   repository: git://github.com/sharyanto/perl-App-LintPrereqs.git
-version: '0.15'
+version: '0.16'
 x_Dist_Zilla:
   perl:
     version: '5.018001'
   plugins:
+    -
+      class: Dist::Zilla::Plugin::Rinci::ScriptFromFunc
+      name: Rinci::ScriptFromFunc
+      version: '0.01'
     -
       class: Dist::Zilla::Plugin::GatherDir
       name: '@Author::SHARYANTO/@Filter/GatherDir'

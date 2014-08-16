@@ -1,14 +1,20 @@
 #!perl
 
-use 5.010;
+# Note: This script is a CLI interface to Riap function /App/LintPrereqs/lint_prereqs
+# and generated automatically using Dist::Zilla::Plugin::Rinci::ScriptFromFunc version 0.01
+
+our $DATE = '2014-08-16'; # DATE
+our $VERSION = '0.16'; # VERSION
+
+use 5.010001;
 use strict;
 use warnings;
 
-use Perinci::CmdLine::Any;
+use Perinci::CmdLine::Any -prefer_lite=>1;
 
-our $VERSION = '0.15'; # VERSION
-
-Perinci::CmdLine::Any->new(url => '/App/LintPrereqs/lint_prereqs')->run;
+Perinci::CmdLine::Any->new(
+    url => "/App/LintPrereqs/lint_prereqs",
+)->run;
 
 # ABSTRACT: Check extraneous/missing prerequisites in dist.ini
 # PODNAME: lint-prereqs
@@ -25,29 +31,51 @@ lint-prereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.15 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2014-07-22.
+This document describes version 0.16 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2014-08-16.
 
 =head1 SYNOPSIS
 
-To use, run the program on your top-level distribution dir, where C<dist.ini> is
-located.
+Usage:
 
- % cd Your-Module
  % lint-prereqs
 
-On success, nothing will be output.
+Examples:
 
-On errors, error messages will be printed, for example:
+ TODO
 
- [455] Module doesn't seem to be used, but mentioned in dist.ini: Foo
- [456] Module is used, but not mentioned in dist.ini: Perinci::CmdLine
- ERROR 500: Extraneous/missing dependencies
+To see all options:
 
-To customize, see L<App::LintPrereqs>.
+ % lint-prereqs --help
 
-=head1 SEE ALSO
+=head1 DESCRIPTION
 
-L<Dist::Zilla>
+Check [Prereqs / *] sections in your dist.ini against what's actually being used
+in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
+modules. Will complain if your prerequisites are not actually used, or already
+in Perl core. Will also complain if there are missing prerequisites.
+
+Designed to work with prerequisites that are manually written. Does not work if
+you use AutoPrereqs.
+
+Sometimes there are prerequisites that you know are used but can't be detected
+by scan_prereqs, or you want to include anyway. If this is the case, you can
+instruct lint_prereqs to assume the prerequisite is used.
+
+ ;!lint-prereqs assume-used # even though we know it is not currently used
+ Foo::Bar=0
+ ;!lint-prereqs assume-used # we are forcing a certain version
+ Baz=0.12
+
+Sometimes there are also prerequisites that are detected by scan_prereqs, but
+you know are already provided by some other modules. So to make lint-prereqs
+ignore them:
+
+ [Extras / lint-prereqs / assume-provided]
+ Qux::Quux=0
+
+=head1 OPTIONS
+
+ TODO
 
 =head1 HOMEPAGE
 

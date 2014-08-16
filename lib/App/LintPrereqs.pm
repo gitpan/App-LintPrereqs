@@ -16,7 +16,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -263,7 +263,7 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.15 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2014-07-22.
+This document describes version 0.16 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2014-08-16.
 
 =head1 SYNOPSIS
 
