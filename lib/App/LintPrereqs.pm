@@ -1,5 +1,8 @@
 package App::LintPrereqs;
 
+our $DATE = '2014-12-18'; # DATE
+our $VERSION = '0.17'; # VERSION
+
 use 5.010001;
 use strict;
 use warnings;
@@ -15,8 +18,6 @@ our %SPEC;
 require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
-
-our $VERSION = '0.16'; # VERSION
 
 $SPEC{lint_prereqs} = {
     v => 1.1,
@@ -60,7 +61,7 @@ _
 };
 require Perinci::Sub::DepChecker; use experimental 'smartmatch';  sub lint_prereqs {
     my %args = @_;
- my $_sahv_dpath = []; my $_w_res = undef; for (sort keys %args) { if (!/\A(-?)\w+(\.\w+)*\z/o) { return [400, "Invalid argument name '$_'"]; } if (!($1 || $_ ~~ ['perl_version'])) { return [400, "Unknown argument '$_'"]; } } if (exists($args{'perl_version'})) { my $err_perl_version; ((defined($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required input not specified"),0)) && ((!ref($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Input is not of type text"),0)); if ($err_perl_version) { return [400, "Invalid value for argument 'perl_version': $err_perl_version"]; } } my $_w_deps_res = Perinci::Sub::DepChecker::check_deps($App::LintPrereqs::SPEC{lint_prereqs}->{deps}); if ($_w_deps_res) { return [412, "Deps failed: $_w_deps_res"]; }    $_w_res = do {
+ my $_sahv_dpath = []; my $_w_res = undef; for (sort keys %args) { if (!/\A(-?)\w+(\.\w+)*\z/o) { return [400, "Invalid argument name (please use letters/numbers/underscores only)'$_'"]; } if (!($1 || $_ ~~ ['perl_version'])) { return [400, "Unknown argument '$_'"]; } } if (exists($args{'perl_version'})) { my $err_perl_version; ((defined($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required but not specified"),0)) && ((!ref($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Not of type text"),0)); if ($err_perl_version) { return [400, "Argument 'perl_version' fails validation: $err_perl_version"]; } } my $_w_deps_res = Perinci::Sub::DepChecker::check_deps($App::LintPrereqs::SPEC{lint_prereqs}->{deps}); if ($_w_deps_res) { return [412, "Deps failed: $_w_deps_res"]; }    $_w_res = do {
     (-f "dist.ini")
         or return [412, "No dist.ini found. ".
                        "Are you in the right dir (dist top-level)? ".
@@ -74,8 +75,12 @@ require Perinci::Sub::DepChecker; use experimental 'smartmatch';  sub lint_prere
     my %assume_used;
     my %assume_provided;
     for my $section (grep {
-        m!^(prereqs|extras \s*/\s* lint[_-]prereqs \s*/\s*
-              assume-(?:provided|used))!ix}
+        m!^(
+              osprereqs \s*/\s* .+ |
+              osprereqs(::\w+)+ |
+              prereqs |
+              extras \s*/\s* lint[_-]prereqs \s*/\s* assume-(?:provided|used)
+          )$!ix}
                          $cfg->Sections) {
         for my $param ($cfg->Parameters($section)) {
             my $v   = $cfg->val($section, $param);
@@ -249,7 +254,7 @@ require Perinci::Sub::DepChecker; use experimental 'smartmatch';  sub lint_prere
 };      unless (ref($_w_res) eq "ARRAY" && $_w_res->[0]) { return [500, 'BUG: Sub App::LintPrereqs::lint_prereqs does not produce envelope']; } return $_w_res; }
 
 1;
-#ABSTRACT: Check extraneous/missing prerequisites in dist.ini
+# ABSTRACT: Check extraneous/missing prerequisites in dist.ini
 
 __END__
 
@@ -263,7 +268,7 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.16 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2014-08-16.
+This document describes version 0.17 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2014-12-18.
 
 =head1 SYNOPSIS
 
@@ -329,7 +334,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/App-LintPr
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/sharyanto/perl-App-LintPrereqs>.
+Source repository is at L<https://github.com/perlancar/perl-App-LintPrereqs>.
 
 =head1 BUGS
 
@@ -341,11 +346,11 @@ feature.
 
 =head1 AUTHOR
 
-Steven Haryanto <stevenharyanto@gmail.com>
+perlancar <perlancar@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Steven Haryanto.
+This software is copyright (c) 2014 by perlancar@cpan.org.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

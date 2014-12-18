@@ -2,8 +2,8 @@ NAME
     App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 VERSION
-    This document describes version 0.16 of App::LintPrereqs (from Perl
-    distribution App-LintPrereqs), released on 2014-08-16.
+    This document describes version 0.17 of App::LintPrereqs (from Perl
+    distribution App-LintPrereqs), released on 2014-12-18.
 
 SYNOPSIS
      # Use via lint-prereqs CLI script
@@ -62,7 +62,7 @@ HOMEPAGE
 
 SOURCE
     Source repository is at
-    <https://github.com/sharyanto/perl-App-LintPrereqs>.
+    <https://github.com/perlancar/perl-App-LintPrereqs>.
 
 BUGS
     Please report any bugs or feature requests on the bugtracker website
@@ -72,10 +72,10 @@ BUGS
     to an existing test-file that illustrates the bug or desired feature.
 
 AUTHOR
-    Steven Haryanto <stevenharyanto@gmail.com>
+    perlancar <perlancar@cpan.org>
 
 COPYRIGHT AND LICENSE
-    This software is copyright (c) 2014 by Steven Haryanto.
+    This software is copyright (c) 2014 by perlancar@cpan.org.
 
     This is free software; you can redistribute it and/or modify it under
     the same terms as the Perl 5 programming language system itself.
