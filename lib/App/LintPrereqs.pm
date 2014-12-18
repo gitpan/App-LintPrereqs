@@ -1,7 +1,7 @@
 package App::LintPrereqs;
 
 our $DATE = '2014-12-18'; # DATE
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 use 5.010001;
 use strict;
@@ -78,7 +78,7 @@ require Perinci::Sub::DepChecker; use experimental 'smartmatch';  sub lint_prere
         m!^(
               osprereqs \s*/\s* .+ |
               osprereqs(::\w+)+ |
-              prereqs |
+              prereqs (?: \s*/\s* \w+)? |
               extras \s*/\s* lint[_-]prereqs \s*/\s* assume-(?:provided|used)
           )$!ix}
                          $cfg->Sections) {
@@ -268,7 +268,7 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.17 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2014-12-18.
+This document describes version 0.18 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2014-12-18.
 
 =head1 SYNOPSIS
 
