@@ -1,10 +1,10 @@
 #!perl
 
 # Note: This script is a CLI interface to Riap function /App/LintPrereqs/lint_prereqs
-# and generated automatically using Dist::Zilla::Plugin::Rinci::ScriptFromFunc version 0.03
+# and generated automatically using Dist::Zilla::Plugin::Rinci::ScriptFromFunc version 0.05
 
-our $DATE = '2014-12-18'; # DATE
-our $VERSION = '0.18'; # VERSION
+our $DATE = '2015-01-04'; # DATE
+our $VERSION = '0.19'; # VERSION
 
 use 5.010001;
 use strict;
@@ -31,7 +31,7 @@ lint-prereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.18 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2014-12-18.
+This document describes version 0.19 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
 
 =head1 SYNOPSIS
 
@@ -41,10 +41,11 @@ Usage:
 
 =head1 DESCRIPTION
 
-Check [Prereqs / *] sections in your dist.ini against what's actually being used
-in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
-modules. Will complain if your prerequisites are not actually used, or already
-in Perl core. Will also complain if there are missing prerequisites.
+Check C<[Prereqs / *]> (as well as C<OSPrereqs>, C<Extras/lint-prereqs/Assume-*>)
+sections in your C<dist.ini> against what's actually being used in your Perl code
+(using C<Perl::PrereqScanner::Lite>) and what's in Perl core list of modules.
+Will complain if your prerequisites are not actually used, or already in Perl
+core. Will also complain if there are missing prerequisites.
 
 Designed to work with prerequisites that are manually written. Does not work if
 you use AutoPrereqs.
@@ -73,30 +74,31 @@ C<*> marks required options.
 
 =item B<--config-path>=I<s>
 
-Set path to configuration file.
+{en_US Set path to configuration file}.
 
 Can be specified multiple times.
 
 =item B<--config-profile>=I<s>
 
-Set configuration profile to use.
+{en_US Set configuration profile to use}.
 
 =item B<--format>=I<s>
 
-Set output format.
+{en_US Choose output format, e.g. json, text}.
 
 =item B<--help>, B<-h>, B<-?>
 
-Show help message.
+{en_US Display this help message}.
 
 =item B<--json>
 
-Set output format to json.
+{en_US Set output format to json}.
 
 =item B<--naked-res>
 
-When outputing as JSON, strip result envelope.
+{en_US When outputing as JSON, strip result envelope}.
 
+{en_US 
 By default, when outputing as JSON, the full enveloped result is returned, e.g.:
 
     [200,"OK",[1,2,3],{"func.extra"=>4}]
@@ -104,24 +106,22 @@ By default, when outputing as JSON, the full enveloped result is returned, e.g.:
 The reason is so you can get the status (1st element), status message (2nd
 element) as well as result metadata/extra result (4th element) instead of just
 the result (3rd element). However, sometimes you want just the result, e.g. when
-you want to pipe the result for more post-processing:
+you want to pipe the result for more post-processing. In this case you can use
+`--naked-res` so you just get:
 
     [1,2,3]
-
-In this case, you can use `--naked-res`.
+}
 
 
 =item B<--no-config>
 
-Do not use any configuration file.
+{en_US Do not use any configuration file}.
 
 =item B<--perl-version>=I<s>
 
-Perl version to use (overrides scan_prereqs/dist.ini).
+{en_US Perl version to use (overrides scan_prereqs/dist.ini)}.
 
 =item B<--version>, B<-v>
-
-Show program version.
 
 =back
 
@@ -165,7 +165,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/App-LintPr
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/perlancar/perl-App-LintPrereqs>.
+Source repository is at L<https://github.com/sharyanto/perl-App-LintPrereqs>.
 
 =head1 BUGS
 
@@ -181,7 +181,7 @@ perlancar <perlancar@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by perlancar@cpan.org.
+This software is copyright (c) 2015 by perlancar@cpan.org.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,7 +1,7 @@
 package App::LintPrereqs;
 
-our $DATE = '2014-12-18'; # DATE
-our $VERSION = '0.18'; # VERSION
+our $DATE = '2015-01-04'; # DATE
+our $VERSION = '0.19'; # VERSION
 
 use 5.010001;
 use strict;
@@ -19,15 +19,48 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
+sub _scan_prereqs {
+    state $scanner = do {
+        require Perl::PrereqScanner::Lite;
+        Perl::PrereqScanner::Lite->new;
+    };
+    require File::Find;
+    my @files;
+    find(
+        sub {
+            return unless -f;
+            push @files, "$File::Find::dir/$_";
+        },
+        (grep {-d} (
+            "t", "xt", "lib", "bin", "script", "scripts",
+            #"sample", "samples", "example", "examples" # decidedly not included
+            #"share", # decidedly not included
+        ))
+    );
+    my %res;
+    for my $file (@files) {
+        #$log->tracef("Scanning %s", $file);
+        my $scanres = $scanner->scan_file($file);
+        next unless $scanres;
+        my $reqs = $scanres->{requirements};
+        #$log->tracef("TMP:reqs=%s", $reqs);
+        for my $req (keys %$reqs) {
+            $res{$req} = $reqs->{$req}{minimum}{original};
+        }
+    }
+    %res;
+}
+
 $SPEC{lint_prereqs} = {
     v => 1.1,
     summary => 'Check extraneous/missing prerequisites in dist.ini',
     description => <<'_',
 
-Check [Prereqs / *] sections in your dist.ini against what's actually being used
-in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
-modules. Will complain if your prerequisites are not actually used, or already
-in Perl core. Will also complain if there are missing prerequisites.
+Check `[Prereqs / *]` (as well as `OSPrereqs`, `Extras/lint-prereqs/Assume-*`)
+sections in your `dist.ini` against what's actually being used in your Perl code
+(using `Perl::PrereqScanner::Lite`) and what's in Perl core list of modules.
+Will complain if your prerequisites are not actually used, or already in Perl
+core. Will also complain if there are missing prerequisites.
 
 Designed to work with prerequisites that are manually written. Does not work if
 you use AutoPrereqs.
@@ -59,9 +92,9 @@ _
         prog => 'scan_prereqs',
     },
 };
-require Perinci::Sub::DepChecker; use experimental 'smartmatch';  sub lint_prereqs {
+sub lint_prereqs {
     my %args = @_;
- my $_sahv_dpath = []; my $_w_res = undef; for (sort keys %args) { if (!/\A(-?)\w+(\.\w+)*\z/o) { return [400, "Invalid argument name (please use letters/numbers/underscores only)'$_'"]; } if (!($1 || $_ ~~ ['perl_version'])) { return [400, "Unknown argument '$_'"]; } } if (exists($args{'perl_version'})) { my $err_perl_version; ((defined($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required but not specified"),0)) && ((!ref($args{'perl_version'})) ? 1 : (($err_perl_version //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Not of type text"),0)); if ($err_perl_version) { return [400, "Argument 'perl_version' fails validation: $err_perl_version"]; } } my $_w_deps_res = Perinci::Sub::DepChecker::check_deps($App::LintPrereqs::SPEC{lint_prereqs}->{deps}); if ($_w_deps_res) { return [412, "Deps failed: $_w_deps_res"]; }    $_w_res = do {
+
     (-f "dist.ini")
         or return [412, "No dist.ini found. ".
                        "Are you in the right dir (dist top-level)? ".
@@ -113,20 +146,7 @@ require Perinci::Sub::DepChecker; use experimental 'smartmatch';  sub lint_prere
     }, "lib");
     $log->tracef("Packages: %s", \%pkgs);
 
-    my %mods_from_scanned;
-    my $sppath = "scan_prereqs";
-    my $spcmd = "$sppath --combine .";
-    $spcmd .= " t/*.t" if <t/*.t>;
-    $spcmd .= " bin/*" if <bin/*>;
-    $spcmd .= " examples/*" if <examples/*>;
-    for (`$spcmd`) {
-        chomp;
-        /^([\w:]+)\s*=\s*(.+)/ or do {
-            warn "Invalid line from $sppath: $_, skipped";
-            next;
-        };
-        $mods_from_scanned{$1} = $2;
-    }
+    my %mods_from_scanned = _scan_prereqs();
     $log->tracef("mods_from_scanned: %s", \%mods_from_scanned);
 
     if ($mods_from_ini{perl} && $mods_from_scanned{perl}) {
@@ -251,7 +271,7 @@ require Perinci::Sub::DepChecker; use experimental 'smartmatch';  sub lint_prere
         result_format_options => {text=>$rfopts, "text-pretty"=>$rfopts},
     };
     [200, @errs ? "Extraneous/missing dependencies" : "OK", \@errs, $resmeta];
-};      unless (ref($_w_res) eq "ARRAY" && $_w_res->[0]) { return [500, 'BUG: Sub App::LintPrereqs::lint_prereqs does not produce envelope']; } return $_w_res; }
+}
 
 1;
 # ABSTRACT: Check extraneous/missing prerequisites in dist.ini
@@ -268,23 +288,25 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.18 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2014-12-18.
+This document describes version 0.19 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
 
 =head1 SYNOPSIS
 
  # Use via lint-prereqs CLI script
 
-=head1 FUNCTIONS
+=head1 FUNGSI
 
 
 =head2 lint_prereqs(%args) -> [status, msg, result, meta]
 
-Check extraneous/missing prerequisites in dist.ini.
+{en_US Check extraneous/missing prerequisites in dist.ini}.
 
-Check [Prereqs / *] sections in your dist.ini against what's actually being used
-in your Perl code (using Perl::PrereqScanner) and what's in Perl core list of
-modules. Will complain if your prerequisites are not actually used, or already
-in Perl core. Will also complain if there are missing prerequisites.
+{en_US 
+Check C<[Prereqs / *]> (as well as C<OSPrereqs>, C<Extras/lint-prereqs/Assume-*>)
+sections in your C<dist.ini> against what's actually being used in your Perl code
+(using C<Perl::PrereqScanner::Lite>) and what's in Perl core list of modules.
+Will complain if your prerequisites are not actually used, or already in Perl
+core. Will also complain if there are missing prerequisites.
 
 Designed to work with prerequisites that are manually written. Does not work if
 you use AutoPrereqs.
@@ -305,36 +327,35 @@ ignore them:
  [Extras / lint-prereqs / assume-provided]
  Qux::Quux=0
 
-Arguments ('*' denotes required arguments):
+}
+
+Argumen ('*' menandakan argumen wajib):
 
 =over 4
 
 =item * B<perl_version> => I<str>
 
-Perl version to use (overrides scan_prereqs/dist.ini).
+{en_US Perl version to use (overrides scan_prereqs/dist.ini)}.
 
 =back
 
-Return value:
+Mengembalikan hasil terbungkus (larik).
 
-Returns an enveloped result (an array).
+Elemen pertama (status) adalah bilangan bulat berisi kode status HTTP
+(200 berarti OK, 4xx kesalahan di pemanggil, 5xx kesalahan di fungsi). Elemen kedua
+(msg) adalah string berisi pesan kesalahan, atau 'OK' jika status
+200. Elemen ketiga (result) bersifat opsional, berisi hasil yang diinginkan. Elemen keempat
+(meta) disebut metadata hasil, bersifat opsional, berupa hash
+informasi tambahan.
 
-First element (status) is an integer containing HTTP status code
-(200 means OK, 4xx caller error, 5xx function error). Second element
-(msg) is a string containing error message, or 'OK' if status is
-200. Third element (result) is optional, the actual result. Fourth
-element (meta) is called result metadata and is optional, a hash
-that contains extra information.
-
- (any)
-
+Nilai kembali:  (any)
 =head1 HOMEPAGE
 
 Please visit the project's homepage at L<https://metacpan.org/release/App-LintPrereqs>.
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/perlancar/perl-App-LintPrereqs>.
+Source repository is at L<https://github.com/sharyanto/perl-App-LintPrereqs>.
 
 =head1 BUGS
 
@@ -350,7 +371,7 @@ perlancar <perlancar@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by perlancar@cpan.org.
+This software is copyright (c) 2015 by perlancar@cpan.org.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
