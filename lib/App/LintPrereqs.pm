@@ -1,7 +1,7 @@
 package App::LintPrereqs;
 
 our $DATE = '2015-01-04'; # DATE
-our $VERSION = '0.20'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 use 5.010001;
 use strict;
@@ -12,8 +12,8 @@ use Config::IniFiles;
 use File::Find;
 use File::Which;
 use Filename::Backup qw(check_backup_filename);
-use Sort::Versions;
 use Scalar::Util 'looks_like_number';
+use Version::Util qw(version_gt version_ne);
 
 our %SPEC;
 require Exporter;
@@ -21,9 +21,16 @@ our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(lint_prereqs);
 
 sub _scan_prereqs {
-    state $scanner = do {
-        require Perl::PrereqScanner::Lite;
-        Perl::PrereqScanner::Lite->new;
+    my %args = @_;
+
+    my $scanner = do {
+        if ($args{lite}) {
+            require Perl::PrereqScanner::Lite;
+            Perl::PrereqScanner::Lite->new;
+        } else {
+            require Perl::PrereqScanner;
+            Perl::PrereqScanner->new;
+        }
     };
     require File::Find;
     my @files;
@@ -41,13 +48,20 @@ sub _scan_prereqs {
     );
     my %res;
     for my $file (@files) {
-        #$log->tracef("Scanning %s", $file);
         my $scanres = $scanner->scan_file($file);
-        next unless $scanres;
+        unless ($scanres) {
+            $log->tracef("Scanned %s, got nothing", $file);
+        }
         my $reqs = $scanres->{requirements};
+        $log->tracef("Scanned %s, got: %s", $file, [keys %$reqs]);
         #$log->tracef("TMP:reqs=%s", $reqs);
         for my $req (keys %$reqs) {
-            $res{$req} = $reqs->{$req}{minimum}{original};
+            my $v = $reqs->{$req}{minimum}{original};;
+            if (exists $res{$req}) {
+                $res{$req} = $v if version_gt($v, $res{$req});
+            } else {
+                $res{$req} = $v;
+            }
         }
     }
     %res;
@@ -88,6 +102,16 @@ _
         perl_version => {
             schema => ['str*'],
             summary => 'Perl version to use (overrides scan_prereqs/dist.ini)',
+        },
+        lite => {
+            schema => ['bool*', is=>1],
+            summary => 'Use Perl::PrereqScanner::Lite instead of Perl::PrereqScanner',
+            description => <<'_',
+
+Lite is faster but it still misses detecting some modules, so it's not the
+default.
+
+_
         },
     },
     deps => {
@@ -148,11 +172,11 @@ sub lint_prereqs {
     }, "lib");
     $log->tracef("Packages: %s", \%pkgs);
 
-    my %mods_from_scanned = _scan_prereqs();
+    my %mods_from_scanned = _scan_prereqs(lite=>$args{lite});
     $log->tracef("mods_from_scanned: %s", \%mods_from_scanned);
 
     if ($mods_from_ini{perl} && $mods_from_scanned{perl}) {
-        if (versioncmp($mods_from_ini{perl}, $mods_from_scanned{perl})) {
+        if (version_ne($mods_from_ini{perl}, $mods_from_scanned{perl})) {
             return [500, "Perl version from dist.ini ($mods_from_ini{perl}) ".
                         "and scan_prereqs ($mods_from_scanned{perl}) mismatch"];
         }
@@ -210,7 +234,7 @@ sub lint_prereqs {
         next if $mod eq 'perl';
         $log->tracef("Checking mod from dist.ini: %s (%s)", $mod, $v);
         my $incorev = $core_mods{$mod};
-        if (defined($incorev) && versioncmp($incorev, $v) >= 0) {
+        if (defined($incorev) && version_gt($incorev, $v)) {
             push @errs, {
                 module  => $mod,
                 error   => "Core in perl $perlv ($incorev) but ".
@@ -220,7 +244,7 @@ sub lint_prereqs {
             };
         }
         my $scanv = $mods_from_scanned{$mod};
-        if (defined($scanv) && $scanv != 0 && versioncmp($v, $scanv)) {
+        if (defined($scanv) && $scanv != 0 && version_ne($v, $scanv)) {
             push @errs, {
                 module  => $mod,
                 error   => "Version mismatch between dist.ini ($v) ".
@@ -243,8 +267,7 @@ sub lint_prereqs {
         $log->tracef("Checking mod from scanned: %s (%s)", $mod, $v);
         if (exists $core_mods{$mod}) {
             my $incorev = $core_mods{$mod};
-            if ($v != 0 && !$mods_from_ini{$mod} &&
-                    versioncmp($incorev, $v) == -1) {
+            if ($v != 0 && !$mods_from_ini{$mod} && version_gt($v, $incorev)) {
                 push @errs, {
                     module  => $mod,
                     error   => "Version requested $v (from scan_prereqs) is ".
@@ -290,7 +313,7 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.20 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
+This document describes version 0.21 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
 
 =head1 SYNOPSIS
 
@@ -331,6 +354,13 @@ ignore them:
 Arguments ('*' denotes required arguments):
 
 =over 4
+
+=item * B<lite> => I<bool>
+
+Use Perl::PrereqScanner::Lite instead of Perl::PrereqScanner.
+
+Lite is faster but it still misses detecting some modules, so it's not the
+default.
 
 =item * B<perl_version> => I<str>
 

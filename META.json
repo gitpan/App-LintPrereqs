@@ -29,6 +29,9 @@
          }
       },
       "runtime" : {
+         "recommends" : {
+            "Perl::PrereqScanner::Lite" : "0"
+         },
          "requires" : {
             "Config::IniFiles" : "0",
             "File::Which" : "0",
@@ -36,9 +39,9 @@
             "Log::Any" : "0",
             "Perinci::CmdLine::Any" : "0.06",
             "Perinci::Sub::DepChecker" : "0",
-            "Perl::PrereqScanner::Lite" : "0",
+            "Perl::PrereqScanner" : "0",
             "Rinci" : "v1.1.0",
-            "Sort::Versions" : "0",
+            "Version::Util" : "0",
             "experimental" : "0",
             "perl" : "5.010001"
          }
@@ -64,7 +67,7 @@
          "web" : "https://github.com/sharyanto/perl-App-LintPrereqs"
       }
    },
-   "version" : "0.20",
+   "version" : "0.21",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018002"
@@ -402,6 +405,17 @@
                }
             },
             "name" : "Prereqs",
+            "version" : "5.029"
+         },
+         {
+            "class" : "Dist::Zilla::Plugin::Prereqs",
+            "config" : {
+               "Dist::Zilla::Plugin::Prereqs" : {
+                  "phase" : "runtime",
+                  "type" : "recommends"
+               }
+            },
+            "name" : "RuntimeRecommends",
             "version" : "5.029"
          },
          {

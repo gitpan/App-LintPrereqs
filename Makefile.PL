@@ -30,9 +30,9 @@ my %WriteMakefileArgs = (
     "Log::Any" => 0,
     "Perinci::CmdLine::Any" => "0.06",
     "Perinci::Sub::DepChecker" => 0,
-    "Perl::PrereqScanner::Lite" => 0,
+    "Perl::PrereqScanner" => 0,
     "Rinci" => "1.1.0",
-    "Sort::Versions" => 0,
+    "Version::Util" => 0,
     "experimental" => 0
   },
   "TEST_REQUIRES" => {
@@ -41,7 +41,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.20",
+  "VERSION" => "0.21",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -59,11 +59,11 @@ my %FallbackPrereqs = (
   "Log::Any" => 0,
   "Perinci::CmdLine::Any" => "0.06",
   "Perinci::Sub::DepChecker" => 0,
-  "Perl::PrereqScanner::Lite" => 0,
+  "Perl::PrereqScanner" => 0,
   "Perl::osnames" => "0.09",
   "Rinci" => "1.1.0",
-  "Sort::Versions" => 0,
   "Test::More" => 0,
+  "Version::Util" => 0,
   "experimental" => 0
 );
 

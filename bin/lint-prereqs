@@ -4,7 +4,7 @@
 # and generated automatically using Dist::Zilla::Plugin::Rinci::ScriptFromFunc version 0.05
 
 our $DATE = '2015-01-04'; # DATE
-our $VERSION = '0.20'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 use 5.010001;
 use strict;
@@ -14,6 +14,7 @@ use Perinci::CmdLine::Any -prefer_lite=>1;
 
 Perinci::CmdLine::Any->new(
     url => "/App/LintPrereqs/lint_prereqs",
+    log => 1,
 )->run;
 
 # ABSTRACT: Check extraneous/missing prerequisites in dist.ini
@@ -31,7 +32,7 @@ lint-prereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.20 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
+This document describes version 0.21 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
 
 =head1 SYNOPSIS
 
@@ -82,6 +83,10 @@ Can be specified multiple times.
 
 Set configuration profile to use.
 
+=item B<--debug>
+
+Set log level to debug.
+
 =item B<--format>=I<s>
 
 Choose output format, e.g. json, text.
@@ -93,6 +98,18 @@ Display this help message.
 =item B<--json>
 
 Set output format to json.
+
+=item B<--lite>
+
+Use Perl::PrereqScanner::Lite instead of Perl::PrereqScanner.
+
+Lite is faster but it still misses detecting some modules, so it's not the
+default.
+
+
+=item B<--log-level>=I<s>
+
+Set log level.
 
 =item B<--naked-res>
 
@@ -118,6 +135,18 @@ Do not use any configuration file.
 =item B<--perl-version>=I<s>
 
 Perl version to use (overrides scan_prereqs/dist.ini).
+
+=item B<--quiet>
+
+Set log level to quiet.
+
+=item B<--trace>
+
+Set log level to trace.
+
+=item B<--verbose>
+
+Set log level to info.
 
 =item B<--version>, B<-v>
 
