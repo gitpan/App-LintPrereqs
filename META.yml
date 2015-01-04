@@ -20,6 +20,7 @@ name: App-LintPrereqs
 requires:
   Config::IniFiles: '0'
   File::Which: '0'
+  Filename::Backup: '0'
   Log::Any: '0'
   Perinci::CmdLine::Any: '0.06'
   Perinci::Sub::DepChecker: '0'
@@ -32,7 +33,7 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=App-LintPrereqs
   homepage: https://metacpan.org/release/App-LintPrereqs
   repository: git://github.com/sharyanto/perl-App-LintPrereqs.git
-version: '0.19'
+version: '0.20'
 x_Dist_Zilla:
   perl:
     version: '5.018002'

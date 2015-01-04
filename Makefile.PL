@@ -26,6 +26,7 @@ my %WriteMakefileArgs = (
   "PREREQ_PM" => {
     "Config::IniFiles" => 0,
     "File::Which" => 0,
+    "Filename::Backup" => 0,
     "Log::Any" => 0,
     "Perinci::CmdLine::Any" => "0.06",
     "Perinci::Sub::DepChecker" => 0,
@@ -40,7 +41,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.19",
+  "VERSION" => "0.20",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -52,6 +53,7 @@ my %FallbackPrereqs = (
   "ExtUtils::MakeMaker" => 0,
   "File::Spec" => 0,
   "File::Which" => 0,
+  "Filename::Backup" => 0,
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
   "Log::Any" => 0,

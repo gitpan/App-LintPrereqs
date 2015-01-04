@@ -4,7 +4,7 @@
 # and generated automatically using Dist::Zilla::Plugin::Rinci::ScriptFromFunc version 0.05
 
 our $DATE = '2015-01-04'; # DATE
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.20'; # VERSION
 
 use 5.010001;
 use strict;
@@ -31,7 +31,7 @@ lint-prereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.19 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
+This document describes version 0.20 of lint-prereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
 
 =head1 SYNOPSIS
 
@@ -74,31 +74,30 @@ C<*> marks required options.
 
 =item B<--config-path>=I<s>
 
-{en_US Set path to configuration file}.
+Set path to configuration file.
 
 Can be specified multiple times.
 
 =item B<--config-profile>=I<s>
 
-{en_US Set configuration profile to use}.
+Set configuration profile to use.
 
 =item B<--format>=I<s>
 
-{en_US Choose output format, e.g. json, text}.
+Choose output format, e.g. json, text.
 
 =item B<--help>, B<-h>, B<-?>
 
-{en_US Display this help message}.
+Display this help message.
 
 =item B<--json>
 
-{en_US Set output format to json}.
+Set output format to json.
 
 =item B<--naked-res>
 
-{en_US When outputing as JSON, strip result envelope}.
+When outputing as JSON, strip result envelope.
 
-{en_US 
 By default, when outputing as JSON, the full enveloped result is returned, e.g.:
 
     [200,"OK",[1,2,3],{"func.extra"=>4}]
@@ -110,16 +109,15 @@ you want to pipe the result for more post-processing. In this case you can use
 `--naked-res` so you just get:
 
     [1,2,3]
-}
 
 
 =item B<--no-config>
 
-{en_US Do not use any configuration file}.
+Do not use any configuration file.
 
 =item B<--perl-version>=I<s>
 
-{en_US Perl version to use (overrides scan_prereqs/dist.ini)}.
+Perl version to use (overrides scan_prereqs/dist.ini).
 
 =item B<--version>, B<-v>
 

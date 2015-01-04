@@ -1,7 +1,7 @@
 package App::LintPrereqs;
 
 our $DATE = '2015-01-04'; # DATE
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.20'; # VERSION
 
 use 5.010001;
 use strict;
@@ -11,6 +11,7 @@ use Log::Any qw($log);
 use Config::IniFiles;
 use File::Find;
 use File::Which;
+use Filename::Backup qw(check_backup_filename);
 use Sort::Versions;
 use Scalar::Util 'looks_like_number';
 
@@ -29,6 +30,7 @@ sub _scan_prereqs {
     find(
         sub {
             return unless -f;
+            return if check_backup_filename(filename=>$_);
             push @files, "$File::Find::dir/$_";
         },
         (grep {-d} (
@@ -288,20 +290,19 @@ App::LintPrereqs - Check extraneous/missing prerequisites in dist.ini
 
 =head1 VERSION
 
-This document describes version 0.19 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
+This document describes version 0.20 of App::LintPrereqs (from Perl distribution App-LintPrereqs), released on 2015-01-04.
 
 =head1 SYNOPSIS
 
  # Use via lint-prereqs CLI script
 
-=head1 FUNGSI
+=head1 FUNCTIONS
 
 
 =head2 lint_prereqs(%args) -> [status, msg, result, meta]
 
-{en_US Check extraneous/missing prerequisites in dist.ini}.
+Check extraneous/missing prerequisites in dist.ini.
 
-{en_US 
 Check C<[Prereqs / *]> (as well as C<OSPrereqs>, C<Extras/lint-prereqs/Assume-*>)
 sections in your C<dist.ini> against what's actually being used in your Perl code
 (using C<Perl::PrereqScanner::Lite>) and what's in Perl core list of modules.
@@ -327,28 +328,26 @@ ignore them:
  [Extras / lint-prereqs / assume-provided]
  Qux::Quux=0
 
-}
-
-Argumen ('*' menandakan argumen wajib):
+Arguments ('*' denotes required arguments):
 
 =over 4
 
 =item * B<perl_version> => I<str>
 
-{en_US Perl version to use (overrides scan_prereqs/dist.ini)}.
+Perl version to use (overrides scan_prereqs/dist.ini).
 
 =back
 
-Mengembalikan hasil terbungkus (larik).
+Returns an enveloped result (an array).
 
-Elemen pertama (status) adalah bilangan bulat berisi kode status HTTP
-(200 berarti OK, 4xx kesalahan di pemanggil, 5xx kesalahan di fungsi). Elemen kedua
-(msg) adalah string berisi pesan kesalahan, atau 'OK' jika status
-200. Elemen ketiga (result) bersifat opsional, berisi hasil yang diinginkan. Elemen keempat
-(meta) disebut metadata hasil, bersifat opsional, berupa hash
-informasi tambahan.
+First element (status) is an integer containing HTTP status code
+(200 means OK, 4xx caller error, 5xx function error). Second element
+(msg) is a string containing error message, or 'OK' if status is
+200. Third element (result) is optional, the actual result. Fourth
+element (meta) is called result metadata and is optional, a hash
+that contains extra information.
 
-Nilai kembali:  (any)
+Return value:  (any)
 =head1 HOMEPAGE
 
 Please visit the project's homepage at L<https://metacpan.org/release/App-LintPrereqs>.
